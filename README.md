@@ -30,3 +30,23 @@ Microfrontend del módulo **Granulometría de Suelos ASTM D6913/D6913M-17** para
 npm install
 npm run dev
 ```
+
+## Cambios recientes (Febrero 2026)
+
+- Encabezado con normalización inteligente en `onBlur`:
+  - `Muestra`: `555` -> `555-SU-26`
+  - `N OT`: `555` -> `555-26`
+- Fechas inteligentes (alineado con CBR/Proctor):
+  - `fecha_ensayo`, `revisado_fecha`, `aprobado_fecha`
+  - Ejemplos: `1202` -> `12/02/26`, `1/2` -> `01/02/26`
+- `Tamiz separador` con valor predeterminado `-`.
+- Sidebar tipo Proctor para seguimiento en vivo:
+  - avance general (%)
+  - estado por secciones (`OK` / `Pend.`)
+  - tabla de resumen (tamices llenos, peso total, CPL)
+
+## Validación recomendada
+
+- Probar `Muestra`, `N OT` y fechas con entrada corta y validar normalización al perder foco.
+- Completar secciones y revisar que el progreso lateral se actualiza automáticamente.
+- Guardar y descargar Excel para confirmar flujo completo.
