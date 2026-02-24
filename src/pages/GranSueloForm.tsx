@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Beaker, ChevronDown, Download, Loader2, Trash2 } from 'lucide-react'
@@ -249,6 +250,54 @@ export default function GranSueloForm() {
         </div>
     )
 
+    const renderTextControl = (value: string | undefined | null, onChange: (v: string) => void, placeholder?: string) => (
+        <input
+            type="text"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            autoComplete="off"
+            data-lpignore="true"
+            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+    )
+
+    const renderNumControl = (value: number | null | undefined, onChange: (v: string) => void) => (
+        <input
+            type="number"
+            step="any"
+            value={value ?? ''}
+            onChange={(e) => onChange(e.target.value)}
+            autoComplete="off"
+            data-lpignore="true"
+            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+    )
+
+    const renderSelectControl = (value: string, options: readonly string[], onChange: (v: string) => void) => (
+        <div className="relative">
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+                {options.map((o) => (
+                    <option key={o} value={o}>
+                        {o}
+                    </option>
+                ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
+    )
+
+    const renderInlineField = (label: string, control: ReactNode) => (
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(260px,1fr)_minmax(280px,1fr)] gap-3 items-center">
+            <p className="text-[15px] font-semibold text-slate-600">{label}</p>
+            {control}
+        </div>
+    )
+
     return (
         <div className="max-w-[1780px] mx-auto p-4 md:p-6">
             <div className="flex items-center gap-3 mb-6">
@@ -286,20 +335,40 @@ export default function GranSueloForm() {
                         <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
                             <h2 className="text-sm font-semibold text-foreground">Condiciones del ensayo</h2>
                         </div>
-                        <div className="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            <div className="space-y-3">
-                                {renderSelect('Método de prueba', form.metodo_prueba, METODO, (v) => setField('metodo_prueba', v as GranSueloPayload['metodo_prueba']))}
-                                {renderSelect('Tamizado', form.tamizado_tipo, TAMIZADO, (v) => setField('tamizado_tipo', v as GranSueloPayload['tamizado_tipo']))}
-                                {renderSelect('Método de muestreo', form.metodo_muestreo, MUESTREO, (v) => setField('metodo_muestreo', v as GranSueloPayload['metodo_muestreo']))}
-                                {renderText('Describa si es turbo u orgánico', form.descripcion_turbo_organico, (v) => setField('descripcion_turbo_organico', v))}
-                            </div>
-                            <div className="space-y-3">
-                                {renderText('Tipo de muestra', form.tipo_muestra, (v) => setField('tipo_muestra', v))}
-                                {renderSelect('Condición muestra', form.condicion_muestra, CONDICION, (v) => setField('condicion_muestra', v as GranSueloPayload['condicion_muestra']))}
-                                {renderText('Tamaño máximo partícula (in)', form.tamano_maximo_particula_in, (v) => setField('tamano_maximo_particula_in', v))}
-                                {renderText('Forma de la partícula', form.forma_particula, (v) => setField('forma_particula', v))}
-                                {renderSelect('Tamiz separador', form.tamiz_separador || 'No. 4', TAMIZ_SEPARADOR, (v) => setField('tamiz_separador', v))}
-                            </div>
+                        <div className="p-4 space-y-3">
+                            {renderInlineField(
+                                'Método de prueba',
+                                renderSelectControl(form.metodo_prueba, METODO, (v) => setField('metodo_prueba', v as GranSueloPayload['metodo_prueba'])),
+                            )}
+                            {renderInlineField(
+                                'Tamizado',
+                                renderSelectControl(form.tamizado_tipo, TAMIZADO, (v) => setField('tamizado_tipo', v as GranSueloPayload['tamizado_tipo'])),
+                            )}
+                            {renderInlineField(
+                                'Método de muestreo',
+                                renderSelectControl(form.metodo_muestreo, MUESTREO, (v) => setField('metodo_muestreo', v as GranSueloPayload['metodo_muestreo'])),
+                            )}
+                            {renderInlineField(
+                                'Describa si es turbo u orgánico',
+                                renderTextControl(form.descripcion_turbo_organico, (v) => setField('descripcion_turbo_organico', v)),
+                            )}
+                            {renderInlineField('Tipo de muestra', renderTextControl(form.tipo_muestra, (v) => setField('tipo_muestra', v)))}
+                            {renderInlineField(
+                                'Condición muestra',
+                                renderSelectControl(form.condicion_muestra, CONDICION, (v) => setField('condicion_muestra', v as GranSueloPayload['condicion_muestra'])),
+                            )}
+                            {renderInlineField(
+                                'Tamaño máximo partícula (in)',
+                                renderTextControl(form.tamano_maximo_particula_in, (v) => setField('tamano_maximo_particula_in', v)),
+                            )}
+                            {renderInlineField(
+                                'Forma de la partícula',
+                                renderTextControl(form.forma_particula, (v) => setField('forma_particula', v)),
+                            )}
+                            {renderInlineField(
+                                'Tamiz separador',
+                                renderSelectControl(form.tamiz_separador || 'No. 4', TAMIZ_SEPARADOR, (v) => setField('tamiz_separador', v)),
+                            )}
                         </div>
                     </div>
 
@@ -307,20 +376,59 @@ export default function GranSueloForm() {
                         <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
                             <h2 className="text-sm font-semibold text-foreground">Tamizado compuesto / global</h2>
                         </div>
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                            {renderNum('CP, Md (g)', form.masa_seca_porcion_gruesa_cp_md_g, (v) => setField('masa_seca_porcion_gruesa_cp_md_g', parseNum(v)))}
-                            {renderNum('FP, Mm (g)', form.masa_humeda_porcion_fina_fp_mm_g, (v) => setField('masa_humeda_porcion_fina_fp_mm_g', parseNum(v)))}
-                            {renderNum('FP, Md (g)', form.masa_seca_porcion_fina_fp_md_g, (v) => setField('masa_seca_porcion_fina_fp_md_g', parseNum(v)))}
-                            {renderNum('S, Md (g)', form.masa_seca_muestra_s_md_g, (v) => setField('masa_seca_muestra_s_md_g', parseNum(v)))}
-                            {renderNum('Masa seca global (g)', form.masa_seca_global_g, (v) => setField('masa_seca_global_g', parseNum(v)))}
-                            {renderNum('SubS masa húmeda (g)', form.subespecie_masa_humeda_g, (v) => setField('subespecie_masa_humeda_g', parseNum(v)))}
-                            {renderNum('SubS masa seca (g)', form.subespecie_masa_seca_g, (v) => setField('subespecie_masa_seca_g', parseNum(v)))}
-                            {renderNum('Contenido agua wfp (%)', form.contenido_agua_wfp_pct, (v) => setField('contenido_agua_wfp_pct', parseNum(v)))}
-                            {renderNum('CPwMd (g)', form.masa_porcion_gruesa_lavada_cpwmd_g, (v) => setField('masa_porcion_gruesa_lavada_cpwmd_g', parseNum(v)))}
-                            {renderNum('CP, Mrpan (g)', form.masa_retenida_plato_cpmrpan_g, (v) => setField('masa_retenida_plato_cpmrpan_g', parseNum(v)))}
-                            {renderNum('CPL (%)', form.perdida_cpl_pct, (v) => setField('perdida_cpl_pct', parseNum(v)))}
-                            {renderNum('Subespécimen lavado fina (g)', form.masa_subespecimen_lavado_fina_g, (v) => setField('masa_subespecimen_lavado_fina_g', parseNum(v)))}
-                            {renderNum('S, Md pérdida (g)', form.masa_seca_muestra_perdida_smd_g, (v) => setField('masa_seca_muestra_perdida_smd_g', parseNum(v)))}
+                        <div className="p-4 space-y-3">
+                            {renderInlineField(
+                                'CP, Md (g)',
+                                renderNumControl(form.masa_seca_porcion_gruesa_cp_md_g, (v) => setField('masa_seca_porcion_gruesa_cp_md_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'FP, Mm (g)',
+                                renderNumControl(form.masa_humeda_porcion_fina_fp_mm_g, (v) => setField('masa_humeda_porcion_fina_fp_mm_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'FP, Md (g)',
+                                renderNumControl(form.masa_seca_porcion_fina_fp_md_g, (v) => setField('masa_seca_porcion_fina_fp_md_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'S, Md (g)',
+                                renderNumControl(form.masa_seca_muestra_s_md_g, (v) => setField('masa_seca_muestra_s_md_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'Masa seca global (g)',
+                                renderNumControl(form.masa_seca_global_g, (v) => setField('masa_seca_global_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'SubS masa húmeda (g)',
+                                renderNumControl(form.subespecie_masa_humeda_g, (v) => setField('subespecie_masa_humeda_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'SubS masa seca (g)',
+                                renderNumControl(form.subespecie_masa_seca_g, (v) => setField('subespecie_masa_seca_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'Contenido agua wfp (%)',
+                                renderNumControl(form.contenido_agua_wfp_pct, (v) => setField('contenido_agua_wfp_pct', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'CPwMd (g)',
+                                renderNumControl(form.masa_porcion_gruesa_lavada_cpwmd_g, (v) => setField('masa_porcion_gruesa_lavada_cpwmd_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'CP, Mrpan (g)',
+                                renderNumControl(form.masa_retenida_plato_cpmrpan_g, (v) => setField('masa_retenida_plato_cpmrpan_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'CPL (%)',
+                                renderNumControl(form.perdida_cpl_pct, (v) => setField('perdida_cpl_pct', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'Subespécimen lavado fina (g)',
+                                renderNumControl(form.masa_subespecimen_lavado_fina_g, (v) => setField('masa_subespecimen_lavado_fina_g', parseNum(v))),
+                            )}
+                            {renderInlineField(
+                                'S, Md pérdida (g)',
+                                renderNumControl(form.masa_seca_muestra_perdida_smd_g, (v) => setField('masa_seca_muestra_perdida_smd_g', parseNum(v))),
+                            )}
                         </div>
                     </div>
 
@@ -328,15 +436,39 @@ export default function GranSueloForm() {
                         <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
                             <h2 className="text-sm font-semibold text-foreground">Clasificación e incidencias</h2>
                         </div>
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {renderText('Clasificación símbolo', form.clasificacion_visual_simbolo, (v) => setField('clasificacion_visual_simbolo', v))}
-                            {renderText('Clasificación nombre', form.clasificacion_visual_nombre, (v) => setField('clasificacion_visual_nombre', v))}
-                            {renderSelect('Se excluyó material', form.excluyo_material, SI_NO, (v) => setField('excluyo_material', v as GranSueloPayload['excluyo_material']))}
-                            {renderText('Describir exclusión', form.excluyo_material_descripcion, (v) => setField('excluyo_material_descripcion', v))}
-                            {renderSelect('Problema en muestra', form.problema_muestra, SI_NO, (v) => setField('problema_muestra', v as GranSueloPayload['problema_muestra']))}
-                            {renderText('Describir problema', form.problema_descripcion, (v) => setField('problema_descripcion', v))}
-                            {renderSelect('Proceso de dispersión', form.proceso_dispersion, PROCESO, (v) => setField('proceso_dispersion', v as GranSueloPayload['proceso_dispersion']))}
-                            {renderNum('Masa retenida primer tamiz (g)', form.masa_retenida_primer_tamiz_g, (v) => setField('masa_retenida_primer_tamiz_g', parseNum(v)))}
+                        <div className="p-4 space-y-3">
+                            {renderInlineField(
+                                'Clasificación símbolo',
+                                renderTextControl(form.clasificacion_visual_simbolo, (v) => setField('clasificacion_visual_simbolo', v)),
+                            )}
+                            {renderInlineField(
+                                'Clasificación nombre',
+                                renderTextControl(form.clasificacion_visual_nombre, (v) => setField('clasificacion_visual_nombre', v)),
+                            )}
+                            {renderInlineField(
+                                'Se excluyó material',
+                                renderSelectControl(form.excluyo_material, SI_NO, (v) => setField('excluyo_material', v as GranSueloPayload['excluyo_material'])),
+                            )}
+                            {renderInlineField(
+                                'Describir exclusión',
+                                renderTextControl(form.excluyo_material_descripcion, (v) => setField('excluyo_material_descripcion', v)),
+                            )}
+                            {renderInlineField(
+                                'Problema en muestra',
+                                renderSelectControl(form.problema_muestra, SI_NO, (v) => setField('problema_muestra', v as GranSueloPayload['problema_muestra'])),
+                            )}
+                            {renderInlineField(
+                                'Describir problema',
+                                renderTextControl(form.problema_descripcion, (v) => setField('problema_descripcion', v)),
+                            )}
+                            {renderInlineField(
+                                'Proceso de dispersión',
+                                renderSelectControl(form.proceso_dispersion, PROCESO, (v) => setField('proceso_dispersion', v as GranSueloPayload['proceso_dispersion'])),
+                            )}
+                            {renderInlineField(
+                                'Masa retenida primer tamiz (g)',
+                                renderNumControl(form.masa_retenida_primer_tamiz_g, (v) => setField('masa_retenida_primer_tamiz_g', parseNum(v))),
+                            )}
                         </div>
                     </div>
 
