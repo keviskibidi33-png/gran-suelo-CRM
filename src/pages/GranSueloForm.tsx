@@ -33,7 +33,7 @@ const MUESTREO = ['-', 'HUMEDO', 'SECADO AL AIRE', 'SECADO AL HORNO'] as const
 const CONDICION = ['-', 'ALTERADO', 'INTACTA'] as const
 const SI_NO = ['-', 'SI', 'NO'] as const
 const PROCESO = ['-', 'MANUAL', 'BAÑO ULTRASÓNICO', 'APARATO DE AGITACIÓN'] as const
-const TAMIZ_SEPARADOR = ['No. 4', 'No. 10', 'No. 20'] as const
+const TAMIZ_SEPARADOR = ['-', 'No. 4', 'No. 10', 'No. 20'] as const
 const EQ_BALANZA = ['-', 'EQP-0046'] as const
 const EQ_HORNO = ['-', 'EQP-0049'] as const
 const REVISADO = ['-', 'FABIAN LA ROSA'] as const
@@ -52,7 +52,7 @@ const initialState = (): GranSueloPayload => ({
     condicion_muestra: '-',
     tamano_maximo_particula_in: '',
     forma_particula: '',
-    tamiz_separador: 'No. 4',
+    tamiz_separador: '-',
     masa_seca_porcion_gruesa_cp_md_g: null,
     masa_humeda_porcion_fina_fp_mm_g: null,
     masa_seca_porcion_fina_fp_md_g: null,
@@ -108,6 +108,81 @@ export default function GranSueloForm() {
         () => Number(form.masa_retenida_tamiz_g.reduce((sum, v) => sum + (v ?? 0), 0).toFixed(3)),
         [form.masa_retenida_tamiz_g],
     )
+    const progressSummary = useMemo(() => {
+        const hasText = (value: string | null | undefined) => Boolean(value && value.trim() !== '' && value.trim() !== '-')
+        const hasNum = (value: number | null | undefined) => value != null
+
+        const sections = [
+            {
+                label: 'Encabezado',
+                ready: hasText(form.muestra) && hasText(form.numero_ot) && hasText(form.realizado_por),
+                detail: `${[form.muestra, form.numero_ot, form.realizado_por].filter((v) => hasText(v)).length}/3`,
+            },
+            {
+                label: 'Condiciones',
+                ready:
+                    form.metodo_prueba !== '-' &&
+                    form.tamizado_tipo !== '-' &&
+                    form.metodo_muestreo !== '-' &&
+                    form.condicion_muestra !== '-' &&
+                    hasText(form.tipo_muestra),
+                detail: form.metodo_prueba === '-' ? 'Método pendiente' : undefined,
+            },
+            {
+                label: 'Tamizado comp./global',
+                ready:
+                    hasNum(form.masa_seca_porcion_gruesa_cp_md_g) ||
+                    hasNum(form.masa_humeda_porcion_fina_fp_mm_g) ||
+                    hasNum(form.masa_seca_porcion_fina_fp_md_g) ||
+                    hasNum(form.masa_seca_muestra_s_md_g) ||
+                    hasNum(form.masa_seca_global_g),
+                detail: hasNum(form.perdida_cpl_pct) ? `CPL: ${form.perdida_cpl_pct}` : undefined,
+            },
+            {
+                label: 'Clasificación',
+                ready: form.excluyo_material !== '-' && form.problema_muestra !== '-' && form.proceso_dispersion !== '-',
+                detail: form.proceso_dispersion === '-' ? 'Dispersión pendiente' : undefined,
+            },
+            {
+                label: 'Tabla tamices',
+                ready: filledSieves > 0,
+                detail: `${filledSieves}/${SIEVE_LABELS.length}`,
+            },
+            {
+                label: 'Equipos y cierre',
+                ready: form.balanza_01g_codigo !== '-' && form.horno_110_codigo !== '-',
+                detail: hasText(form.revisado_por) && hasText(form.aprobado_por) ? 'Firmas listas' : 'Sin firmas',
+            },
+        ]
+
+        const readyCount = sections.filter((section) => section.ready).length
+        const completion = Math.round((readyCount / sections.length) * 100)
+
+        return { completion, sections }
+    }, [
+        filledSieves,
+        form.aprobado_por,
+        form.balanza_01g_codigo,
+        form.condicion_muestra,
+        form.excluyo_material,
+        form.horno_110_codigo,
+        form.metodo_muestreo,
+        form.metodo_prueba,
+        form.masa_humeda_porcion_fina_fp_mm_g,
+        form.masa_seca_global_g,
+        form.masa_seca_muestra_s_md_g,
+        form.masa_seca_porcion_fina_fp_md_g,
+        form.masa_seca_porcion_gruesa_cp_md_g,
+        form.muestra,
+        form.numero_ot,
+        form.perdida_cpl_pct,
+        form.problema_muestra,
+        form.proceso_dispersion,
+        form.realizado_por,
+        form.revisado_por,
+        form.tamizado_tipo,
+        form.tipo_muestra,
+    ])
 
     const setField = useCallback(<K extends keyof GranSueloPayload>(key: K, value: GranSueloPayload[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }))
@@ -367,7 +442,7 @@ export default function GranSueloForm() {
                             )}
                             {renderInlineField(
                                 'Tamiz separador',
-                                renderSelectControl(form.tamiz_separador || 'No. 4', TAMIZ_SEPARADOR, (v) => setField('tamiz_separador', v)),
+                                renderSelectControl(form.tamiz_separador || '-', TAMIZ_SEPARADOR, (v) => setField('tamiz_separador', v)),
                             )}
                         </div>
                     </div>
@@ -571,7 +646,48 @@ export default function GranSueloForm() {
 
                 <aside className="hidden xl:block">
                     <div className="sticky top-4 bg-card border border-border rounded-lg shadow-sm p-4 text-xs space-y-4">
-                        <h3 className="text-sm font-semibold text-foreground">Formulario / Tabla de información</h3>
+                        <div>
+                            <h3 className="text-sm font-semibold text-foreground">Formulario / Tabla de información</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">Seguimiento en vivo del ensayo</p>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                                <span>Avance general</span>
+                                <span className="font-semibold text-foreground">{progressSummary.completion}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-primary transition-all"
+                                    style={{ width: `${progressSummary.completion}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-md border border-border">
+                            <table className="w-full text-xs">
+                                <tbody>
+                                    {progressSummary.sections.map((section) => (
+                                        <tr key={section.label} className="border-b border-border last:border-b-0">
+                                            <td className="px-3 py-2 text-muted-foreground">{section.label}</td>
+                                            <td className="px-3 py-2 text-right">
+                                                <span
+                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                                                        section.ready
+                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                                    }`}
+                                                >
+                                                    {section.ready ? 'OK' : 'Pend.'}
+                                                </span>
+                                                {section.detail ? <span className="ml-2 text-muted-foreground">{section.detail}</span> : null}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
                         <table className="w-full border border-border">
                             <tbody>
                                 <tr className="border-b">
@@ -590,6 +706,18 @@ export default function GranSueloForm() {
                                 </tr>
                             </tbody>
                         </table>
+
+                        <div className="text-xs text-muted-foreground border border-border rounded-md p-3 bg-muted/20 space-y-1">
+                            <p>
+                                <span className="font-medium text-foreground">Muestra:</span> {form.muestra || '-'}
+                            </p>
+                            <p>
+                                <span className="font-medium text-foreground">N OT:</span> {form.numero_ot || '-'}
+                            </p>
+                            <p>
+                                <span className="font-medium text-foreground">Realizado:</span> {form.realizado_por || '-'}
+                            </p>
+                        </div>
                     </div>
                 </aside>
             </div>
