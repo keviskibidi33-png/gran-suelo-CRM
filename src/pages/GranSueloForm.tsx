@@ -170,10 +170,11 @@ export default function GranSueloForm() {
     const [loadingEdit, setLoadingEdit] = useState(false)
     const [editingEnsayoId, setEditingEnsayoId] = useState<number | null>(() => getEnsayoId())
 
-    const filledSieves = useMemo(() => form.masa_retenida_tamiz_g.filter((v) => v != null).length, [form.masa_retenida_tamiz_g])
+    const sieveWeights = form.masa_retenida_tamiz_g ?? []
+    const filledSieves = useMemo(() => sieveWeights.filter((v) => v != null).length, [sieveWeights])
     const totalSieves = useMemo(
-        () => Number(form.masa_retenida_tamiz_g.reduce((sum, v) => sum + (v ?? 0), 0).toFixed(3)),
-        [form.masa_retenida_tamiz_g],
+        () => Number(sieveWeights.reduce<number>((sum, v) => sum + (v ?? 0), 0).toFixed(3)),
+        [sieveWeights],
     )
     const progressSummary = useMemo(() => {
         const hasText = (value: string | null | undefined) => Boolean(value && value.trim() !== '' && value.trim() !== '-')
@@ -366,21 +367,6 @@ export default function GranSueloForm() {
                 onChange={(e) => onChange(e.target.value)}
                 onBlur={onBlur}
                 placeholder={placeholder}
-                autoComplete="off"
-                data-lpignore="true"
-                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-        </div>
-    )
-
-    const renderNum = (label: string, value: number | null | undefined, onChange: (v: string) => void) => (
-        <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">{label}</label>
-            <input
-                type="number"
-                step="any"
-                value={value ?? ''}
-                onChange={(e) => onChange(e.target.value)}
                 autoComplete="off"
                 data-lpignore="true"
                 className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -583,10 +569,6 @@ export default function GranSueloForm() {
                                 'Subespécimen lavado fina (g)',
                                 renderNumControl(form.masa_subespecimen_lavado_fina_g, (v) => setField('masa_subespecimen_lavado_fina_g', parseNum(v))),
                             )}
-                            {renderInlineField(
-                                'S, Md pérdida (g)',
-                                renderNumControl(form.masa_seca_muestra_perdida_smd_g, (v) => setField('masa_seca_muestra_perdida_smd_g', parseNum(v))),
-                            )}
                         </div>
                     </div>
 
@@ -608,16 +590,24 @@ export default function GranSueloForm() {
                                 renderSelectControl(form.excluyo_material, SI_NO, (v) => setField('excluyo_material', v as GranSueloPayload['excluyo_material'])),
                             )}
                             {renderInlineField(
-                                'Describir exclusión',
-                                renderTextControl(form.excluyo_material_descripcion, (v) => setField('excluyo_material_descripcion', v)),
+                                'Describir exclusión (sección: "Se excluyó cualquier suelo o material de la muestra")',
+                                renderTextControl(
+                                    form.excluyo_material_descripcion,
+                                    (v) => setField('excluyo_material_descripcion', v),
+                                    'Texto que aparece junto a "Describirlo:" de esa sección',
+                                ),
                             )}
                             {renderInlineField(
                                 'Problema en muestra',
                                 renderSelectControl(form.problema_muestra, SI_NO, (v) => setField('problema_muestra', v as GranSueloPayload['problema_muestra'])),
                             )}
                             {renderInlineField(
-                                'Describir problema',
-                                renderTextControl(form.problema_descripcion, (v) => setField('problema_descripcion', v)),
+                                'Describir problema (sección: "Se encontró algún problema en la muestra")',
+                                renderTextControl(
+                                    form.problema_descripcion,
+                                    (v) => setField('problema_descripcion', v),
+                                    'Texto que aparece junto a "Describirlo:" de esa sección',
+                                ),
                             )}
                             {renderInlineField(
                                 'Proceso de dispersión',
