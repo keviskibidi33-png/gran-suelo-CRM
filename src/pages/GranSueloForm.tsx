@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -170,88 +170,6 @@ export default function GranSueloForm() {
     const [loadingEdit, setLoadingEdit] = useState(false)
     const [editingEnsayoId, setEditingEnsayoId] = useState<number | null>(() => getEnsayoId())
 
-    const sieveWeights = form.masa_retenida_tamiz_g ?? []
-    const filledSieves = useMemo(() => sieveWeights.filter((v) => v != null).length, [sieveWeights])
-    const totalSieves = useMemo(
-        () => Number(sieveWeights.reduce<number>((sum, v) => sum + (v ?? 0), 0).toFixed(3)),
-        [sieveWeights],
-    )
-    const progressSummary = useMemo(() => {
-        const hasText = (value: string | null | undefined) => Boolean(value && value.trim() !== '' && value.trim() !== '-')
-        const hasNum = (value: number | null | undefined) => value != null
-
-        const sections = [
-            {
-                label: 'Encabezado',
-                ready: hasText(form.muestra) && hasText(form.numero_ot) && hasText(form.realizado_por),
-                detail: `${[form.muestra, form.numero_ot, form.realizado_por].filter((v) => hasText(v)).length}/3`,
-            },
-            {
-                label: 'Condiciones',
-                ready:
-                    form.metodo_prueba !== '-' &&
-                    form.tamizado_tipo !== '-' &&
-                    form.metodo_muestreo !== '-' &&
-                    form.condicion_muestra !== '-' &&
-                    hasText(form.tipo_muestra),
-                detail: form.metodo_prueba === '-' ? 'Método pendiente' : undefined,
-            },
-            {
-                label: 'Tamizado comp./global',
-                ready:
-                    hasNum(form.masa_seca_porcion_gruesa_cp_md_g) ||
-                    hasNum(form.masa_humeda_porcion_fina_fp_mm_g) ||
-                    hasNum(form.masa_seca_porcion_fina_fp_md_g) ||
-                    hasNum(form.masa_seca_muestra_s_md_g) ||
-                    hasNum(form.masa_seca_global_g),
-                detail: hasNum(form.perdida_cpl_pct) ? `CPL: ${form.perdida_cpl_pct}` : undefined,
-            },
-            {
-                label: 'Clasificación',
-                ready: form.excluyo_material !== '-' && form.problema_muestra !== '-' && form.proceso_dispersion !== '-',
-                detail: form.proceso_dispersion === '-' ? 'Dispersión pendiente' : undefined,
-            },
-            {
-                label: 'Tabla tamices',
-                ready: filledSieves > 0,
-                detail: `${filledSieves}/${SIEVE_LABELS.length}`,
-            },
-            {
-                label: 'Equipos y cierre',
-                ready: form.balanza_01g_codigo !== '-' && form.horno_110_codigo !== '-',
-                detail: hasText(form.revisado_por) && hasText(form.aprobado_por) ? 'Firmas listas' : 'Sin firmas',
-            },
-        ]
-
-        const readyCount = sections.filter((section) => section.ready).length
-        const completion = Math.round((readyCount / sections.length) * 100)
-
-        return { completion, sections }
-    }, [
-        filledSieves,
-        form.aprobado_por,
-        form.balanza_01g_codigo,
-        form.condicion_muestra,
-        form.excluyo_material,
-        form.horno_110_codigo,
-        form.metodo_muestreo,
-        form.metodo_prueba,
-        form.masa_humeda_porcion_fina_fp_mm_g,
-        form.masa_seca_global_g,
-        form.masa_seca_muestra_s_md_g,
-        form.masa_seca_porcion_fina_fp_md_g,
-        form.masa_seca_porcion_gruesa_cp_md_g,
-        form.muestra,
-        form.numero_ot,
-        form.perdida_cpl_pct,
-        form.problema_muestra,
-        form.proceso_dispersion,
-        form.realizado_por,
-        form.revisado_por,
-        form.tamizado_tipo,
-        form.tipo_muestra,
-    ])
-
     const setField = useCallback(<K extends keyof GranSueloPayload>(key: K, value: GranSueloPayload[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }))
     }, [])
@@ -360,7 +278,7 @@ export default function GranSueloForm() {
         onBlur?: () => void,
     ) => (
         <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">{label}</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
             <input
                 type="text"
                 value={value || ''}
@@ -369,19 +287,19 @@ export default function GranSueloForm() {
                 placeholder={placeholder}
                 autoComplete="off"
                 data-lpignore="true"
-                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-9 px-3 rounded-md border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
         </div>
     )
 
     const renderSelect = (label: string, value: string, options: readonly string[], onChange: (v: string) => void) => (
         <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">{label}</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
             <div className="relative">
                 <select
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                     {options.map((o) => (
                         <option key={o} value={o}>
@@ -389,7 +307,7 @@ export default function GranSueloForm() {
                         </option>
                     ))}
                 </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 pointer-events-none" />
             </div>
         </div>
     )
@@ -402,7 +320,7 @@ export default function GranSueloForm() {
             placeholder={placeholder}
             autoComplete="off"
             data-lpignore="true"
-            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full h-9 px-3 rounded-md border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
     )
 
@@ -414,7 +332,7 @@ export default function GranSueloForm() {
             onChange={(e) => onChange(e.target.value)}
             autoComplete="off"
             data-lpignore="true"
-            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full h-9 px-3 rounded-md border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
     )
 
@@ -423,7 +341,7 @@ export default function GranSueloForm() {
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
             >
                 {options.map((o) => (
                     <option key={o} value={o}>
@@ -431,7 +349,7 @@ export default function GranSueloForm() {
                     </option>
                 ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 pointer-events-none" />
         </div>
     )
 
@@ -443,29 +361,41 @@ export default function GranSueloForm() {
     )
 
     return (
-        <div className="max-w-[1780px] mx-auto p-4 md:p-6">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-primary/10">
-                    <Beaker className="h-6 w-6 text-primary" />
+        <div className="min-h-screen bg-slate-100 p-4 md:p-6">
+            <div className="mx-auto max-w-[1360px] space-y-4">
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-slate-50">
+                        <Beaker className="h-5 w-5 text-slate-900" />
+                    </div>
+                    <div>
+                        <h1 className="text-base md:text-lg font-semibold text-slate-900">Gran Suelo - ASTM D6913/D6913M-17</h1>
+                        <p className="text-xs text-slate-600">Formato fiel a plantilla Excel</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-xl font-bold text-foreground">Granulometría de Suelos - ASTM D6913/D6913M-17</h1>
-                    <p className="text-sm text-muted-foreground">Formulario operativo Gran Suelo</p>
-                </div>
-            </div>
 
-            <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
                 <div className="space-y-5">
                     {loadingEdit ? (
-                        <div className="h-10 rounded-lg border border-border bg-muted/40 px-3 text-sm text-muted-foreground flex items-center gap-2">
+                        <div className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 flex items-center gap-2 shadow-sm">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Cargando ensayo...
                         </div>
                     ) : null}
 
-                    <div className="bg-card border border-border rounded-lg shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
-                            <h2 className="text-sm font-semibold text-foreground">Encabezado</h2>
+                    <div className="overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 shadow-sm">
+                        <div className="border-b border-slate-300 px-4 py-4 text-center">
+                            <p className="text-[22px] font-semibold leading-tight text-slate-900">LABORATORIO DE ENSAYO DE MATERIALES</p>
+                            <p className="text-lg font-semibold leading-tight text-slate-900">FORMATO N° F-LEM-P-SU-24.01</p>
+                        </div>
+                        <div className="border-b border-slate-300 bg-slate-100 px-4 py-2 text-center">
+                            <p className="text-sm font-semibold text-slate-900">
+                                Standard Test Methods for Particle-Size Distribution (Gradation) of Soils Using Sieve Analysis
+                            </p>
+                            <p className="text-sm font-semibold text-slate-900">ASTM D6913/D6913M-17 (Reapproved 2025)</p>
+                        </div>
+
+                    <div className="border border-slate-300 bg-white shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
+                            <h2 className="text-sm font-semibold text-slate-900">Encabezado</h2>
                         </div>
                         <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
                             {renderText('Muestra *', form.muestra, (v) => setField('muestra', v), '123-SU-26', () => applyFormattedField('muestra', normalizeMuestraCode))}
@@ -475,9 +405,9 @@ export default function GranSueloForm() {
                         </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-lg shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
-                            <h2 className="text-sm font-semibold text-foreground">Condiciones del ensayo</h2>
+                    <div className="border border-slate-300 bg-white shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
+                            <h2 className="text-sm font-semibold text-slate-900">Condiciones del ensayo</h2>
                         </div>
                         <div className="p-4 space-y-3">
                             {renderInlineField(
@@ -516,9 +446,9 @@ export default function GranSueloForm() {
                         </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-lg shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
-                            <h2 className="text-sm font-semibold text-foreground">Tamizado compuesto / global</h2>
+                    <div className="border border-slate-300 bg-white shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
+                            <h2 className="text-sm font-semibold text-slate-900">Tamizado compuesto / global</h2>
                         </div>
                         <div className="p-4 space-y-3">
                             {renderInlineField(
@@ -572,9 +502,9 @@ export default function GranSueloForm() {
                         </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-lg shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
-                            <h2 className="text-sm font-semibold text-foreground">Clasificación e incidencias</h2>
+                    <div className="border border-slate-300 bg-white shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
+                            <h2 className="text-sm font-semibold text-slate-900">Clasificación e incidencias</h2>
                         </div>
                         <div className="p-4 space-y-3">
                             {renderInlineField(
@@ -620,29 +550,29 @@ export default function GranSueloForm() {
                         </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-lg shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
-                            <h2 className="text-sm font-semibold text-foreground">Tabla de pesos por tamiz</h2>
+                    <div className="border border-slate-300 bg-white shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
+                            <h2 className="text-sm font-semibold text-slate-900">Tabla de pesos por tamiz</h2>
                         </div>
                         <div className="p-4 overflow-x-auto">
                             <table className="w-full min-w-[700px] text-sm">
-                                <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground">
+                                <thead className="bg-slate-100 text-xs font-semibold text-slate-600">
                                     <tr>
-                                        <th className="px-3 py-2 border-b border-r border-border text-left">Tamiz</th>
-                                        <th className="px-3 py-2 border-b border-border text-left">Peso (g)</th>
+                                        <th className="px-3 py-2 border-b border-r border-slate-300 text-left">Tamiz</th>
+                                        <th className="px-3 py-2 border-b border-slate-300 text-left">Peso (g)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {SIEVE_LABELS.map((label, idx) => (
                                         <tr key={label}>
-                                            <td className="px-3 py-2 border-b border-r border-border">{label}</td>
-                                            <td className="px-3 py-2 border-b border-border">
+                                            <td className="px-3 py-2 border-b border-r border-slate-300">{label}</td>
+                                            <td className="px-3 py-2 border-b border-slate-300">
                                                 <input
                                                     type="number"
                                                     step="any"
                                                     value={form.masa_retenida_tamiz_g[idx] ?? ''}
                                                     onChange={(e) => setSieveValue(idx, e.target.value)}
-                                                    className="w-full h-8 px-2 rounded-md border border-input bg-background text-sm"
+                                                    className="w-full h-8 px-2 rounded-md border border-input bg-white text-sm"
                                                 />
                                             </td>
                                         </tr>
@@ -652,9 +582,9 @@ export default function GranSueloForm() {
                         </div>
                     </div>
 
-                    <div className="bg-card border border-border rounded-lg shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-border bg-muted/50 rounded-t-lg">
-                            <h2 className="text-sm font-semibold text-foreground">Equipos / observaciones / firmas</h2>
+                    <div className="border border-slate-300 bg-white shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
+                            <h2 className="text-sm font-semibold text-slate-900">Equipos / observaciones / firmas</h2>
                         </div>
                         <div className="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
                             <div className="space-y-3">
@@ -663,12 +593,12 @@ export default function GranSueloForm() {
                             </div>
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-1">Observaciones</label>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
                                     <textarea
                                         value={form.observaciones || ''}
                                         onChange={(e) => setField('observaciones', e.target.value)}
                                         rows={4}
-                                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none"
+                                        className="w-full px-3 py-2 rounded-md border border-input bg-white text-sm resize-none"
                                     />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -681,11 +611,13 @@ export default function GranSueloForm() {
                         </div>
                     </div>
 
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <button
                             onClick={clearAll}
                             disabled={loading}
-                            className="h-11 rounded-lg border border-input bg-background text-foreground font-medium hover:bg-muted/60 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-11 rounded-lg border border-input bg-white text-foreground font-medium hover:bg-muted/60 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             <Trash2 className="h-4 w-4" />
                             Limpiar todo
@@ -710,90 +642,14 @@ export default function GranSueloForm() {
                             ) : (
                                 <>
                                     <Download className="h-4 w-4" />
-                                    Guardar y descargar Excel
+                                    Guardar y Descargar
                                 </>
                             )}
                         </button>
                     </div>
                 </div>
-
-                <aside className="hidden xl:block">
-                    <div className="sticky top-4 bg-card border border-border rounded-lg shadow-sm p-4 text-xs space-y-4">
-                        <div>
-                            <h3 className="text-sm font-semibold text-foreground">Formulario / Tabla de información</h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">Seguimiento en vivo del ensayo</p>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                                <span>Avance general</span>
-                                <span className="font-semibold text-foreground">{progressSummary.completion}%</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary transition-all"
-                                    style={{ width: `${progressSummary.completion}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="overflow-hidden rounded-md border border-border">
-                            <table className="w-full text-xs">
-                                <tbody>
-                                    {progressSummary.sections.map((section) => (
-                                        <tr key={section.label} className="border-b border-border last:border-b-0">
-                                            <td className="px-3 py-2 text-muted-foreground">{section.label}</td>
-                                            <td className="px-3 py-2 text-right">
-                                                <span
-                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                                                        section.ready
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                                                    }`}
-                                                >
-                                                    {section.ready ? 'OK' : 'Pend.'}
-                                                </span>
-                                                {section.detail ? <span className="ml-2 text-muted-foreground">{section.detail}</span> : null}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <table className="w-full border border-border">
-                            <tbody>
-                                <tr className="border-b">
-                                    <td className="px-2 py-2">Tamices llenos</td>
-                                    <td className="px-2 py-2 text-right font-semibold">
-                                        {filledSieves}/{SIEVE_LABELS.length}
-                                    </td>
-                                </tr>
-                                <tr className="border-b">
-                                    <td className="px-2 py-2">Peso total (g)</td>
-                                    <td className="px-2 py-2 text-right font-semibold">{totalSieves || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td className="px-2 py-2">CPL (%)</td>
-                                    <td className="px-2 py-2 text-right font-semibold">{form.perdida_cpl_pct ?? '-'}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <div className="text-xs text-muted-foreground border border-border rounded-md p-3 bg-muted/20 space-y-1">
-                            <p>
-                                <span className="font-medium text-foreground">Muestra:</span> {form.muestra || '-'}
-                            </p>
-                            <p>
-                                <span className="font-medium text-foreground">N OT:</span> {form.numero_ot || '-'}
-                            </p>
-                            <p>
-                                <span className="font-medium text-foreground">Realizado:</span> {form.realizado_por || '-'}
-                            </p>
-                        </div>
-                    </div>
-                </aside>
             </div>
         </div>
     )
 }
+

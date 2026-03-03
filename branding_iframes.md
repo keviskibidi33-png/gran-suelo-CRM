@@ -1,19 +1,19 @@
-# Branding Iframes - Proctor
+# Branding Iframes - Gran Suelo
 
-Documento de referencia para mantener consistente el branding del microfrontend de Proctor y su visualizacion embebida en iframe dentro del CRM.
+Documento de referencia para mantener consistente el branding del microfrontend de **Gran Suelo** y su visualizacion embebida en iframe dentro del CRM.
 
 ## Alcance
 
-- Microfrontend: `proctor-crm`
-- Shell embebedor: `crm-geofal` modulo Proctor
-- Flujo: CRM abre `https://proctor.geofal.com.pe` en dialog modal con `token` y opcionalmente `ensayo_id`
+- Microfrontend: `gran-suelo-CRM`
+- Shell embebedor: `crm-geofal` modulo Gran Suelo
+- Flujo: CRM abre `https://gran-suelo.geofal.com.pe` en dialog modal con `token` y opcionalmente `ensayo_id`
 
 ## Reglas visuales
 
-- Mantener la paleta y tipografia definida en `src/index.css`.
-- Reusar componentes base (`Section`, `Input`, `SelectField`) para consistencia con humedad/cbr.
-- Mantener el orden visual de la hoja oficial `Template_Proctor.xlsx` en el formulario web.
+- Mantener estilo tipo hoja tecnica, fiel a la plantilla Excel oficial de Gran Suelo.
+- Preservar estructura de encabezado institucional y bloque ASTM D6913/D6913M-17.
 - Mantener botonera final con accion doble: `Guardar` y `Guardar y Descargar`.
+- Mantener consistencia de fuentes, bordes y jerarquia visual con GE Fino/GE Grueso.
 
 ## Contrato iframe
 
@@ -23,7 +23,7 @@ Documento de referencia para mantener consistente el branding del microfrontend 
 
 ## Archivos clave
 
-- `proctor-crm/src/pages/ProctorForm.tsx`
-- `proctor-crm/src/App.tsx`
-- `proctor-crm/src/components/SessionGuard.tsx`
-- `crm-geofal/src/components/dashboard/proctor-module.tsx`
+- `gran-suelo-CRM/src/pages/GranSueloForm.tsx`
+- `gran-suelo-CRM/src/App.tsx`
+- `gran-suelo-CRM/src/components/SessionGuard.tsx`
+- `crm-geofal/src/components/dashboard/gran-suelo-module.tsx`
