@@ -81,7 +81,7 @@ const initialState = (): GranSueloPayload => ({
     revisado_por: '-',
     revisado_fecha: '',
     aprobado_por: '-',
-    aprobado_fecha: '',
+    aprobado_fecha: formatTodayShortDate(),
 })
 
 const parseNum = (v: unknown): number | null => {
@@ -91,6 +91,13 @@ const parseNum = (v: unknown): number | null => {
 }
 
 const getCurrentYearShort = () => new Date().getFullYear().toString().slice(-2)
+const formatTodayShortDate = () => {
+    const d = new Date()
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yy = String(d.getFullYear()).slice(-2)
+    return `${dd}/${mm}/${yy}`
+}
 
 const normalizeMuestraCode = (raw: string): string => {
     const value = raw.trim().toUpperCase()
