@@ -1,5 +1,5 @@
+
 import { useCallback, useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { Beaker, ChevronDown, Download, Loader2, Trash2 } from 'lucide-react'
@@ -27,17 +27,23 @@ const SIEVE_LABELS = [
     '< No. 200',
 ] as const
 
-const METODO = ['-', 'A', 'B'] as const
-const TAMIZADO = ['-', 'FRACCIONADO', 'GLOBAL'] as const
-const MUESTREO = ['-', 'HUMEDO', 'SECADO AL AIRE', 'SECADO AL HORNO'] as const
+const SIEVE_OPENINGS = ['75.00', '50.00', '37.50', '25.00', '19.00', '9.50', '4.75', '2.000', '0.850', '0.425', '0.250', '0.150', '0.106', '0.075', '...'] as const
+
 const CONDICION = ['-', 'ALTERADO', 'INTACTA'] as const
 const SI_NO = ['-', 'SI', 'NO'] as const
-const PROCESO = ['-', 'MANUAL', 'BAÑO ULTRASÓNICO', 'APARATO DE AGITACIÓN'] as const
 const TAMIZ_SEPARADOR = ['-', 'No. 4', 'No. 10', 'No. 20'] as const
 const EQ_BALANZA = ['-', 'EQP-0046'] as const
 const EQ_HORNO = ['-', 'EQP-0049'] as const
 const REVISADO = ['-', 'FABIAN LA ROSA'] as const
 const APROBADO = ['-', 'IRMA COAQUIRA'] as const
+
+const SHEET_SECTION = 'border border-slate-500 bg-white'
+const SHEET_TITLE = 'border-b border-slate-500 px-2 py-1 text-center text-[13px] font-bold uppercase tracking-[0.02em] text-slate-900'
+const SHEET_LABEL = 'border-b border-r border-slate-400 px-2 py-1 text-[13px] leading-snug text-slate-900 align-middle'
+const SHEET_VALUE = 'border-b border-slate-400 px-2 py-1 text-[13px] align-middle'
+const SHEET_HEADER_CELL = 'border-b border-r border-slate-400 px-2 py-1 text-center text-[12px] font-bold text-slate-900 align-middle'
+const SHEET_INPUT = 'w-full h-8 border border-slate-300 bg-white px-2 text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400'
+const SHEET_TEXTAREA = 'w-full min-h-[68px] resize-none border border-slate-300 bg-white px-2 py-1 text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400'
 
 const initialState = (): GranSueloPayload => ({
     muestra: '',
@@ -91,6 +97,7 @@ const parseNum = (v: unknown): number | null => {
 }
 
 const getCurrentYearShort = () => new Date().getFullYear().toString().slice(-2)
+
 const formatTodayShortDate = () => {
     const d = new Date()
     const dd = String(d.getDate()).padStart(2, '0')
@@ -118,10 +125,7 @@ const normalizeNumeroOtCode = (raw: string): string => {
 
     const compact = value.replace(/\s+/g, '')
     const year = getCurrentYearShort()
-    const patterns = [
-        /^(?:N?OT-)?(\d+)(?:-(\d{2}))?$/,
-        /^(\d+)(?:-(?:N?OT))?(?:-(\d{2}))?$/,
-    ]
+    const patterns = [/^(?:N?OT-)?(\d+)(?:-(\d{2}))?$/, /^(\d+)(?:-(?:N?OT))?(?:-(\d{2}))?$/]
 
     for (const pattern of patterns) {
         const match = compact.match(pattern)
@@ -278,60 +282,36 @@ export default function GranSueloForm() {
     )
 
     const renderText = (
-        label: string,
         value: string | undefined | null,
         onChange: (v: string) => void,
         placeholder?: string,
         onBlur?: () => void,
+        className: string = SHEET_INPUT,
     ) => (
-        <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
-            <input
-                type="text"
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value)}
-                onBlur={onBlur}
-                placeholder={placeholder}
-                autoComplete="off"
-                data-lpignore="true"
-                className="w-full h-9 px-3 rounded-md border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-        </div>
-    )
-
-    const renderSelect = (label: string, value: string, options: readonly string[], onChange: (v: string) => void) => (
-        <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
-            <div className="relative">
-                <select
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                    {options.map((o) => (
-                        <option key={o} value={o}>
-                            {o}
-                        </option>
-                    ))}
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 pointer-events-none" />
-            </div>
-        </div>
-    )
-
-    const renderTextControl = (value: string | undefined | null, onChange: (v: string) => void, placeholder?: string) => (
         <input
             type="text"
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
+            onBlur={onBlur}
             placeholder={placeholder}
             autoComplete="off"
             data-lpignore="true"
-            className="w-full h-9 px-3 rounded-md border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className={className}
         />
     )
 
-    const renderNumControl = (value: number | null | undefined, onChange: (v: string) => void) => (
+    const renderTextarea = (value: string | undefined | null, onChange: (v: string) => void, rows = 3) => (
+        <textarea
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            rows={rows}
+            autoComplete="off"
+            data-lpignore="true"
+            className={SHEET_TEXTAREA}
+        />
+    )
+
+    const renderNumber = (value: number | null | undefined, onChange: (v: string) => void, className: string = SHEET_INPUT) => (
         <input
             type="number"
             step="any"
@@ -339,324 +319,508 @@ export default function GranSueloForm() {
             onChange={(e) => onChange(e.target.value)}
             autoComplete="off"
             data-lpignore="true"
-            className="w-full h-9 px-3 rounded-md border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className={className}
         />
     )
 
-    const renderSelectControl = (value: string, options: readonly string[], onChange: (v: string) => void) => (
+    const renderSelect = (value: string, options: readonly string[], onChange: (v: string) => void, className: string = SHEET_INPUT) => (
         <div className="relative">
-            <select
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full h-9 pl-3 pr-8 rounded-md border border-input bg-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-                {options.map((o) => (
-                    <option key={o} value={o}>
-                        {o}
+            <select value={value} onChange={(e) => onChange(e.target.value)} className={`${className} appearance-none pr-8`}>
+                {options.map((option) => (
+                    <option key={option} value={option}>
+                        {option}
                     </option>
                 ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 pointer-events-none" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
         </div>
     )
 
-    const renderInlineField = (label: string, control: ReactNode) => (
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(260px,1fr)_minmax(280px,1fr)] gap-3 items-center">
-            <p className="text-[15px] font-semibold text-slate-600">{label}</p>
-            {control}
-        </div>
+    const renderMarkButton = (active: boolean, onClick: () => void) => (
+        <button
+            type="button"
+            onClick={onClick}
+            className="flex h-7 w-9 items-center justify-center border border-slate-400 bg-white text-[13px] font-bold text-slate-900"
+        >
+            {active ? 'X' : ''}
+        </button>
+    )
+
+    const renderProcesoButton = (label: GranSueloPayload['proceso_dispersion'], text: string) => (
+        <button
+            type="button"
+            onClick={() => setField('proceso_dispersion', form.proceso_dispersion === label ? '-' : label)}
+            className={`h-8 border border-slate-400 px-2 text-[12px] text-slate-900 ${
+                form.proceso_dispersion === label ? 'bg-slate-200 font-semibold' : 'bg-white'
+            }`}
+        >
+            {text}
+        </button>
     )
 
     return (
         <div className="min-h-screen bg-slate-100 p-4 md:p-6">
-            <div className="mx-auto max-w-[1360px] space-y-4">
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm">
+            <div className="mx-auto max-w-[1500px] space-y-4">
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-slate-50">
                         <Beaker className="h-5 w-5 text-slate-900" />
                     </div>
                     <div>
-                        <h1 className="text-base md:text-lg font-semibold text-slate-900">Gran Suelo - ASTM D6913/D6913M-17</h1>
+                        <h1 className="text-base font-semibold text-slate-900 md:text-lg">Gran Suelo - ASTM D6913/D6913M-17</h1>
                         <p className="text-xs text-slate-600">Formato fiel a plantilla Excel</p>
                     </div>
                 </div>
 
-                <div className="space-y-5">
-                    {loadingEdit ? (
-                        <div className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 flex items-center gap-2 shadow-sm">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Cargando ensayo...
-                        </div>
-                    ) : null}
+                {loadingEdit ? (
+                    <div className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando ensayo...
+                    </div>
+                ) : null}
 
-                    <div className="overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 shadow-sm">
-                        <div className="border-b border-slate-300 px-4 py-4 text-center">
-                            <p className="text-[22px] font-semibold leading-tight text-slate-900">LABORATORIO DE ENSAYO DE MATERIALES</p>
-                            <p className="text-lg font-semibold leading-tight text-slate-900">FORMATO N° F-LEM-P-SU-24.01</p>
-                        </div>
-                        <div className="border-b border-slate-300 bg-slate-100 px-4 py-2 text-center">
-                            <p className="text-sm font-semibold text-slate-900">
-                                Standard Test Methods for Particle-Size Distribution (Gradation) of Soils Using Sieve Analysis
-                            </p>
-                            <p className="text-sm font-semibold text-slate-900">ASTM D6913/D6913M-17 (Reapproved 2025)</p>
-                        </div>
-
-                    <div className="border border-slate-300 bg-white shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
-                            <h2 className="text-sm font-semibold text-slate-900">Encabezado</h2>
-                        </div>
-                        <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {renderText('Muestra *', form.muestra, (v) => setField('muestra', v), '123-SU-26', () => applyFormattedField('muestra', normalizeMuestraCode))}
-                            {renderText('N OT *', form.numero_ot, (v) => setField('numero_ot', v), '1234-26', () => applyFormattedField('numero_ot', normalizeNumeroOtCode))}
-                            {renderText('Fecha ensayo', form.fecha_ensayo, (v) => setField('fecha_ensayo', v), 'DD/MM/AA', () => applyFormattedField('fecha_ensayo', normalizeFlexibleDate))}
-                            {renderText('Realizado por *', form.realizado_por, (v) => setField('realizado_por', v))}
-                        </div>
+                <div className="overflow-hidden border border-slate-500 bg-white shadow-sm">
+                    <div className="border-b border-slate-500 px-4 py-3 text-center">
+                        <p className="text-[22px] font-semibold uppercase leading-tight text-slate-900">Laboratorio de Ensayo de Materiales</p>
+                        <p className="text-lg font-semibold leading-tight text-slate-900">Formato N° F-LEM-P-SU-24.01</p>
+                    </div>
+                    <div className="border-b border-slate-500 px-4 py-2 text-center">
+                        <p className="text-[14px] font-bold text-slate-900">
+                            Standard Test Methods for Particle-Size Distribution (Gradation) of Soils Using Sieve Analysis
+                        </p>
+                        <p className="text-[14px] font-bold text-slate-900">ASTM D6913/D6913M-17 (Reapproved 2025)</p>
                     </div>
 
-                    <div className="border border-slate-300 bg-white shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
-                            <h2 className="text-sm font-semibold text-slate-900">Condiciones del ensayo</h2>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            {renderInlineField(
-                                'Método de prueba',
-                                renderSelectControl(form.metodo_prueba, METODO, (v) => setField('metodo_prueba', v as GranSueloPayload['metodo_prueba'])),
-                            )}
-                            {renderInlineField(
-                                'Tamizado',
-                                renderSelectControl(form.tamizado_tipo, TAMIZADO, (v) => setField('tamizado_tipo', v as GranSueloPayload['tamizado_tipo'])),
-                            )}
-                            {renderInlineField(
-                                'Método de muestreo',
-                                renderSelectControl(form.metodo_muestreo, MUESTREO, (v) => setField('metodo_muestreo', v as GranSueloPayload['metodo_muestreo'])),
-                            )}
-                            {renderInlineField(
-                                'Describa si es turbo u orgánico',
-                                renderTextControl(form.descripcion_turbo_organico, (v) => setField('descripcion_turbo_organico', v)),
-                            )}
-                            {renderInlineField('Tipo de muestra', renderTextControl(form.tipo_muestra, (v) => setField('tipo_muestra', v)))}
-                            {renderInlineField(
-                                'Condición muestra',
-                                renderSelectControl(form.condicion_muestra, CONDICION, (v) => setField('condicion_muestra', v as GranSueloPayload['condicion_muestra'])),
-                            )}
-                            {renderInlineField(
-                                'Tamaño máximo partícula (in)',
-                                renderTextControl(form.tamano_maximo_particula_in, (v) => setField('tamano_maximo_particula_in', v)),
-                            )}
-                            {renderInlineField(
-                                'Forma de la partícula',
-                                renderTextControl(form.forma_particula, (v) => setField('forma_particula', v)),
-                            )}
-                            {renderInlineField(
-                                'Tamiz separador',
-                                renderSelectControl(form.tamiz_separador || '-', TAMIZ_SEPARADOR, (v) => setField('tamiz_separador', v)),
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="border border-slate-300 bg-white shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
-                            <h2 className="text-sm font-semibold text-slate-900">Tamizado compuesto / global</h2>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            {renderInlineField(
-                                'CP, Md (g)',
-                                renderNumControl(form.masa_seca_porcion_gruesa_cp_md_g, (v) => setField('masa_seca_porcion_gruesa_cp_md_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'FP, Mm (g)',
-                                renderNumControl(form.masa_humeda_porcion_fina_fp_mm_g, (v) => setField('masa_humeda_porcion_fina_fp_mm_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'FP, Md (g)',
-                                renderNumControl(form.masa_seca_porcion_fina_fp_md_g, (v) => setField('masa_seca_porcion_fina_fp_md_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'S, Md (g)',
-                                renderNumControl(form.masa_seca_muestra_s_md_g, (v) => setField('masa_seca_muestra_s_md_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'Masa seca global (g)',
-                                renderNumControl(form.masa_seca_global_g, (v) => setField('masa_seca_global_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'SubS masa húmeda (g)',
-                                renderNumControl(form.subespecie_masa_humeda_g, (v) => setField('subespecie_masa_humeda_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'SubS masa seca (g)',
-                                renderNumControl(form.subespecie_masa_seca_g, (v) => setField('subespecie_masa_seca_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'Contenido agua wfp (%)',
-                                renderNumControl(form.contenido_agua_wfp_pct, (v) => setField('contenido_agua_wfp_pct', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'CPwMd (g)',
-                                renderNumControl(form.masa_porcion_gruesa_lavada_cpwmd_g, (v) => setField('masa_porcion_gruesa_lavada_cpwmd_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'CP, Mrpan (g)',
-                                renderNumControl(form.masa_retenida_plato_cpmrpan_g, (v) => setField('masa_retenida_plato_cpmrpan_g', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'CPL (%)',
-                                renderNumControl(form.perdida_cpl_pct, (v) => setField('perdida_cpl_pct', parseNum(v))),
-                            )}
-                            {renderInlineField(
-                                'Subespécimen lavado fina (g)',
-                                renderNumControl(form.masa_subespecimen_lavado_fina_g, (v) => setField('masa_subespecimen_lavado_fina_g', parseNum(v))),
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="border border-slate-300 bg-white shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
-                            <h2 className="text-sm font-semibold text-slate-900">Clasificación e incidencias</h2>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            {renderInlineField(
-                                'Clasificación símbolo',
-                                renderTextControl(form.clasificacion_visual_simbolo, (v) => setField('clasificacion_visual_simbolo', v)),
-                            )}
-                            {renderInlineField(
-                                'Clasificación nombre',
-                                renderTextControl(form.clasificacion_visual_nombre, (v) => setField('clasificacion_visual_nombre', v)),
-                            )}
-                            {renderInlineField(
-                                'Se excluyó material',
-                                renderSelectControl(form.excluyo_material, SI_NO, (v) => setField('excluyo_material', v as GranSueloPayload['excluyo_material'])),
-                            )}
-                            {renderInlineField(
-                                'Describir exclusión (sección: "Se excluyó cualquier suelo o material de la muestra")',
-                                renderTextControl(
-                                    form.excluyo_material_descripcion,
-                                    (v) => setField('excluyo_material_descripcion', v),
-                                    'Texto que aparece junto a "Describirlo:" de esa sección',
-                                ),
-                            )}
-                            {renderInlineField(
-                                'Problema en muestra',
-                                renderSelectControl(form.problema_muestra, SI_NO, (v) => setField('problema_muestra', v as GranSueloPayload['problema_muestra'])),
-                            )}
-                            {renderInlineField(
-                                'Describir problema (sección: "Se encontró algún problema en la muestra")',
-                                renderTextControl(
-                                    form.problema_descripcion,
-                                    (v) => setField('problema_descripcion', v),
-                                    'Texto que aparece junto a "Describirlo:" de esa sección',
-                                ),
-                            )}
-                            {renderInlineField(
-                                'Proceso de dispersión',
-                                renderSelectControl(form.proceso_dispersion, PROCESO, (v) => setField('proceso_dispersion', v as GranSueloPayload['proceso_dispersion'])),
-                            )}
-                            {renderInlineField(
-                                'Masa retenida primer tamiz (g)',
-                                renderNumControl(form.masa_retenida_primer_tamiz_g, (v) => setField('masa_retenida_primer_tamiz_g', parseNum(v))),
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="border border-slate-300 bg-white shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
-                            <h2 className="text-sm font-semibold text-slate-900">Tabla de pesos por tamiz</h2>
-                        </div>
-                        <div className="p-4 overflow-x-auto">
-                            <table className="w-full min-w-[700px] text-sm">
-                                <thead className="bg-slate-100 text-xs font-semibold text-slate-600">
-                                    <tr>
-                                        <th className="px-3 py-2 border-b border-r border-slate-300 text-left">Tamiz</th>
-                                        <th className="px-3 py-2 border-b border-slate-300 text-left">Peso (g)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {SIEVE_LABELS.map((label, idx) => (
-                                        <tr key={label}>
-                                            <td className="px-3 py-2 border-b border-r border-slate-300">{label}</td>
-                                            <td className="px-3 py-2 border-b border-slate-300">
-                                                <input
-                                                    type="number"
-                                                    step="any"
-                                                    value={form.masa_retenida_tamiz_g[idx] ?? ''}
-                                                    onChange={(e) => setSieveValue(idx, e.target.value)}
-                                                    className="w-full h-8 px-2 rounded-md border border-input bg-white text-sm"
-                                                />
-                                            </td>
-                                        </tr>
+                    <div className="overflow-x-auto border-b border-slate-500">
+                        <table className="min-w-full border-collapse">
+                            <thead>
+                                <tr>
+                                    {['Muestra', 'N° OT', 'Fecha de ensayo', 'Realizado'].map((title, index) => (
+                                        <th
+                                            key={title}
+                                            className={`px-2 py-1 text-center text-[13px] font-bold uppercase text-slate-900 ${
+                                                index < 3 ? 'border-r border-slate-500' : ''
+                                            }`}
+                                        >
+                                            {title}
+                                        </th>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td className="border-r border-t border-slate-500 p-2">
+                                        {renderText(form.muestra, (v) => setField('muestra', v), '123-SU-26', () =>
+                                            applyFormattedField('muestra', normalizeMuestraCode),
+                                        )}
+                                    </td>
+                                    <td className="border-r border-t border-slate-500 p-2">
+                                        {renderText(form.numero_ot, (v) => setField('numero_ot', v), '1234-26', () =>
+                                            applyFormattedField('numero_ot', normalizeNumeroOtCode),
+                                        )}
+                                    </td>
+                                    <td className="border-r border-t border-slate-500 p-2">
+                                        {renderText(form.fecha_ensayo, (v) => setField('fecha_ensayo', v), 'DD/MM/AA', () =>
+                                            applyFormattedField('fecha_ensayo', normalizeFlexibleDate),
+                                        )}
+                                    </td>
+                                    <td className="border-t border-slate-500 p-2">{renderText(form.realizado_por, (v) => setField('realizado_por', v))}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
-                    <div className="border border-slate-300 bg-white shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-300 bg-slate-100">
-                            <h2 className="text-sm font-semibold text-slate-900">Equipos / observaciones / firmas</h2>
-                        </div>
-                        <div className="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div className="space-y-3 bg-slate-50 p-3">
+                        <div className="grid gap-3 xl:grid-cols-[210px_minmax(0,1fr)_320px]">
                             <div className="space-y-3">
-                                {renderSelect('Balanza 0.1 g', form.balanza_01g_codigo || '-', EQ_BALANZA, (v) => setField('balanza_01g_codigo', v))}
-                                {renderSelect('Horno 110 °C', form.horno_110_codigo || '-', EQ_HORNO, (v) => setField('horno_110_codigo', v))}
-                            </div>
-                            <div className="space-y-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
-                                    <textarea
-                                        value={form.observaciones || ''}
-                                        onChange={(e) => setField('observaciones', e.target.value)}
-                                        rows={4}
-                                        className="w-full px-3 py-2 rounded-md border border-input bg-white text-sm resize-none"
-                                    />
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Método de prueba</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Método "A"</td>
+                                                <td className={SHEET_VALUE}>{renderMarkButton(form.metodo_prueba === 'A', () => setField('metodo_prueba', form.metodo_prueba === 'A' ? '-' : 'A'))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Método "B"</td>
+                                                <td className="px-2 py-1">{renderMarkButton(form.metodo_prueba === 'B', () => setField('metodo_prueba', form.metodo_prueba === 'B' ? '-' : 'B'))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {renderSelect('Revisado por', form.revisado_por || '-', REVISADO, (v) => setField('revisado_por', v))}
-                                    {renderSelect('Aprobado por', form.aprobado_por || '-', APROBADO, (v) => setField('aprobado_por', v))}
-                                    {renderText('Fecha revisado', form.revisado_fecha || '', (v) => setField('revisado_fecha', v), 'DD/MM/AA', () => applyFormattedField('revisado_fecha', normalizeFlexibleDate))}
-                                    {renderText('Fecha aprobado', form.aprobado_fecha || '', (v) => setField('aprobado_fecha', v), 'DD/MM/AA', () => applyFormattedField('aprobado_fecha', normalizeFlexibleDate))}
+
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Tamizado</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Fraccionado</td>
+                                                <td className={SHEET_VALUE}>
+                                                    {renderMarkButton(form.tamizado_tipo === 'FRACCIONADO', () =>
+                                                        setField('tamizado_tipo', form.tamizado_tipo === 'FRACCIONADO' ? '-' : 'FRACCIONADO'),
+                                                    )}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Global</td>
+                                                <td className="px-2 py-1">
+                                                    {renderMarkButton(form.tamizado_tipo === 'GLOBAL', () =>
+                                                        setField('tamizado_tipo', form.tamizado_tipo === 'GLOBAL' ? '-' : 'GLOBAL'),
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Método de muestreo</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Húmedo</td>
+                                                <td className={SHEET_VALUE}>
+                                                    {renderMarkButton(form.metodo_muestreo === 'HUMEDO', () =>
+                                                        setField('metodo_muestreo', form.metodo_muestreo === 'HUMEDO' ? '-' : 'HUMEDO'),
+                                                    )}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Secado al aire</td>
+                                                <td className={SHEET_VALUE}>
+                                                    {renderMarkButton(form.metodo_muestreo === 'SECADO AL AIRE', () =>
+                                                        setField('metodo_muestreo', form.metodo_muestreo === 'SECADO AL AIRE' ? '-' : 'SECADO AL AIRE'),
+                                                    )}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Secado al horno</td>
+                                                <td className="px-2 py-1">
+                                                    {renderMarkButton(form.metodo_muestreo === 'SECADO AL HORNO', () =>
+                                                        setField('metodo_muestreo', form.metodo_muestreo === 'SECADO AL HORNO' ? '-' : 'SECADO AL HORNO'),
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Descripción de la muestra</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Tipo de muestra :</td>
+                                                <td className={SHEET_VALUE}>{renderText(form.tipo_muestra, (v) => setField('tipo_muestra', v))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Condición de muestra:</td>
+                                                <td className={SHEET_VALUE}>
+                                                    {renderSelect(form.condicion_muestra, CONDICION, (v) => setField('condicion_muestra', v as GranSueloPayload['condicion_muestra']))}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Tamaño máximo de la partícula, Visual (in):</td>
+                                                <td className={SHEET_VALUE}>{renderText(form.tamano_maximo_particula_in, (v) => setField('tamano_maximo_particula_in', v))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Forma de la partícula:</td>
+                                                <td className="px-2 py-1">{renderText(form.forma_particula, (v) => setField('forma_particula', v))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Tamizado compuesto (fraccionado)</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa seca porción gruesa (CP, Md) (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_seca_porcion_gruesa_cp_md_g, (v) => setField('masa_seca_porcion_gruesa_cp_md_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa húmeda porción fina (FP, Mm) (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_humeda_porcion_fina_fp_mm_g, (v) => setField('masa_humeda_porcion_fina_fp_mm_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa seca porción fina (FP, Md) (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_seca_porcion_fina_fp_md_g, (v) => setField('masa_seca_porcion_fina_fp_md_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Masa seca de la muestra (S, Md) (g)</td>
+                                                <td className="px-2 py-1">{renderNumber(form.masa_seca_muestra_s_md_g, (v) => setField('masa_seca_muestra_s_md_g', parseNum(v)))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Describa si es turbo o orgánico</div>
+                                    <div className="p-2">{renderTextarea(form.descripcion_turbo_organico, (v) => setField('descripcion_turbo_organico', v), 3)}</div>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Tamiz separador (*)</div>
+                                    <div className="p-2">{renderSelect(form.tamiz_separador || '-', TAMIZ_SEPARADOR, (v) => setField('tamiz_separador', v))}</div>
+                                    <p className="border-t border-slate-400 px-2 py-1 text-[11px] text-slate-700">(*) si aplica tamizado compuesto</p>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Tamizado serie única de tamiz (global)</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa seca global (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_seca_global_g, (v) => setField('masa_seca_global_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={`${SHEET_LABEL} font-bold`}>Humedad de la subespecie porción fina</td>
+                                                <td className={SHEET_VALUE}></td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa húmeda (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.subespecie_masa_humeda_g, (v) => setField('subespecie_masa_humeda_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa seca (SubS, Md) (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.subespecie_masa_seca_g, (v) => setField('subespecie_masa_seca_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Contenido de agua (wfp) (%)</td>
+                                                <td className="px-2 py-1">{renderNumber(form.contenido_agua_wfp_pct, (v) => setField('contenido_agua_wfp_pct', parseNum(v)))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 xl:grid-cols-[210px_minmax(0,1fr)_320px]">
+                            <div className="space-y-3">
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Clasif. visual muestra</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Símbolo</td>
+                                                <td className={SHEET_VALUE}>{renderText(form.clasificacion_visual_simbolo, (v) => setField('clasificacion_visual_simbolo', v))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Nombre</td>
+                                                <td className="px-2 py-1">{renderText(form.clasificacion_visual_nombre, (v) => setField('clasificacion_visual_nombre', v))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className="grid grid-cols-[1fr_84px] border-b border-slate-500">
+                                        <div className="px-2 py-1 text-center text-[13px] font-bold text-slate-900">Se excluyó cualquier suelo o material de la muestra</div>
+                                        <div className="border-l border-slate-500 p-1">
+                                            {renderSelect(form.excluyo_material, SI_NO, (v) => setField('excluyo_material', v as GranSueloPayload['excluyo_material']))}
+                                        </div>
+                                    </div>
+                                    <div className="px-2 py-1 text-[12px] font-semibold text-slate-900">Describirlo:</div>
+                                    <div className="p-2 pt-0">{renderTextarea(form.excluyo_material_descripcion, (v) => setField('excluyo_material_descripcion', v), 3)}</div>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className="grid grid-cols-[1fr_84px] border-b border-slate-500">
+                                        <div className="px-2 py-1 text-center text-[13px] font-bold text-slate-900">Se encontró algún problema en la muestra</div>
+                                        <div className="border-l border-slate-500 p-1">
+                                            {renderSelect(form.problema_muestra, SI_NO, (v) => setField('problema_muestra', v as GranSueloPayload['problema_muestra']))}
+                                        </div>
+                                    </div>
+                                    <div className="px-2 py-1 text-[12px] font-semibold text-slate-900">Describirlo:</div>
+                                    <div className="p-2 pt-0">{renderTextarea(form.problema_descripcion, (v) => setField('problema_descripcion', v), 3)}</div>
+                                </div>
+                            </div>
+
+                            <div className="xl:col-span-2 space-y-3">
+                                <div className={SHEET_SECTION}>
+                                    <div className="border-b border-slate-500 px-2 py-1 text-[13px] font-bold uppercase text-slate-900">
+                                        Pérdida aceptable durante el lavado y el tamizado{' '}
+                                        <span className="font-normal normal-case">CPL=(((CP,Md-CPw,MD)+CP,Mrpan)/S,Md)</span>
+                                    </div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa seca de la porción más gruesa después del lavado (CPwMd) (g)</td>
+                                                <td className={`${SHEET_VALUE} w-[170px]`}>
+                                                    {renderNumber(form.masa_porcion_gruesa_lavada_cpwmd_g, (v) => setField('masa_porcion_gruesa_lavada_cpwmd_g', parseNum(v)))}
+                                                </td>
+                                                <td className="border-b border-l border-slate-400 px-3 py-1 text-[12px] text-slate-900" rowSpan={5}>
+                                                    El porcentaje de pérdida es aceptable si el valor de <span className="font-bold">CPL</span> es menor o igual al <span className="font-bold">0.5%</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa seca retenida en el plato después de tamizar la porción más gruesa (CP, Mrpan) (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_retenida_plato_cpmrpan_g, (v) => setField('masa_retenida_plato_cpmrpan_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Porcentaje de la porción más gruesa perdida durante el lavado y tamizado (CPL) (%)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.perdida_cpl_pct, (v) => setField('perdida_cpl_pct', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Masa de subespecimen lavado porción fina (g)</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_subespecimen_lavado_fina_g, (v) => setField('masa_subespecimen_lavado_fina_g', parseNum(v)))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-2 text-[13px] text-slate-900">
+                                                    <span className="block">Masa seca de la muestra (S,Md)</span>
+                                                    <span className="mt-1 block text-[12px] italic text-slate-700">S,Md= CP,Md + (FP,Mm/(1+wfp/100))</span>
+                                                </td>
+                                                <td className="px-2 py-1">{renderNumber(form.masa_seca_muestra_perdida_smd_g, (v) => setField('masa_seca_muestra_perdida_smd_g', parseNum(v)))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_250px]">
+                                    <div className={SHEET_SECTION}>
+                                        <div className={SHEET_TITLE}>Proceso de dispersión</div>
+                                        <div className="grid grid-cols-1 gap-[1px] bg-slate-400 sm:grid-cols-3">
+                                            <div className="bg-white p-1">{renderProcesoButton('MANUAL', 'Manual')}</div>
+                                            <div className="bg-white p-1">{renderProcesoButton('BAÑO ULTRASÓNICO', 'Baño ultrasónico')}</div>
+                                            <div className="bg-white p-1">{renderProcesoButton('APARATO DE AGITACIÓN', 'Aparato de agitación')}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className={SHEET_SECTION}>
+                                        <div className={SHEET_TITLE}>Masa retenida en el primer tamiz (g)</div>
+                                        <div className="p-2">{renderNumber(form.masa_retenida_primer_tamiz_g, (v) => setField('masa_retenida_primer_tamiz_g', parseNum(v)))}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 xl:grid-cols-[240px_minmax(0,1fr)_320px]">
+                            <div className={SHEET_SECTION}>
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th className={SHEET_HEADER_CELL}>Malla</th>
+                                            <th className={SHEET_HEADER_CELL}>Abertura</th>
+                                            <th className="border-b border-slate-400 px-2 py-1 text-center text-[12px] font-bold text-slate-900">Peso</th>
+                                        </tr>
+                                        <tr>
+                                            <th className={SHEET_HEADER_CELL}>Tamiz</th>
+                                            <th className={SHEET_HEADER_CELL}>(mm)</th>
+                                            <th className="border-b border-slate-400 px-2 py-1 text-center text-[12px] font-bold text-slate-900">(g)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {SIEVE_LABELS.map((label, index) => (
+                                            <tr key={label}>
+                                                <td className={SHEET_LABEL}>{label}</td>
+                                                <td className={SHEET_LABEL}>{SIEVE_OPENINGS[index]}</td>
+                                                <td className={SHEET_VALUE}>{renderNumber(form.masa_retenida_tamiz_g[index], (v) => setSieveValue(index, v), 'w-full h-7 border border-slate-300 bg-white px-2 text-[12px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400')}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Tabla de pesos mínimos</div>
+                                    <div className="p-2">
+                                        <img src="/ImagenGranSuelo.png" alt="Tabla de pesos mínimos Gran Suelo" className="w-full border border-slate-400 object-contain" />
+                                    </div>
+                                    <p className="border-t border-slate-400 px-2 py-1 text-center text-[11px] text-slate-800">
+                                        Fuente: Norma ASTM D6913/D6913M-17 (Reapproved 2025)
+                                    </p>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Observaciones</div>
+                                    <div className="p-2">{renderTextarea(form.observaciones, (v) => setField('observaciones', v), 4)}</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className={SHEET_SECTION}>
+                                    <div className={SHEET_TITLE}>Equipos utilizados / Códigos</div>
+                                    <table className="w-full border-collapse">
+                                        <tbody>
+                                            <tr>
+                                                <td className={SHEET_LABEL}>Balanza 0.1 g</td>
+                                                <td className={SHEET_VALUE}>{renderSelect(form.balanza_01g_codigo || '-', EQ_BALANZA, (v) => setField('balanza_01g_codigo', v))}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-400 px-2 py-1 text-[13px] text-slate-900">Horno 110°C</td>
+                                                <td className="px-2 py-1">{renderSelect(form.horno_110_codigo || '-', EQ_HORNO, (v) => setField('horno_110_codigo', v))}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className={SHEET_SECTION}>
+                                    <div className="grid grid-cols-2 gap-0">
+                                        <div className="border-r border-slate-500 p-2">
+                                            <p className="mb-2 text-[13px] font-semibold text-slate-900">Revisado:</p>
+                                            <div className="space-y-2">
+                                                {renderSelect(form.revisado_por || '-', REVISADO, (v) => setField('revisado_por', v))}
+                                                {renderText(form.revisado_fecha || '', (v) => setField('revisado_fecha', v), 'DD/MM/AA', () =>
+                                                    applyFormattedField('revisado_fecha', normalizeFlexibleDate),
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="p-2">
+                                            <p className="mb-2 text-[13px] font-semibold text-slate-900">Aprobado:</p>
+                                            <div className="space-y-2">
+                                                {renderSelect(form.aprobado_por || '-', APROBADO, (v) => setField('aprobado_por', v))}
+                                                {renderText(form.aprobado_fecha || '', (v) => setField('aprobado_fecha', v), 'DD/MM/AA', () =>
+                                                    applyFormattedField('aprobado_fecha', normalizeFlexibleDate),
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <button
-                            onClick={clearAll}
-                            disabled={loading}
-                            className="h-11 rounded-lg border border-input bg-white text-foreground font-medium hover:bg-muted/60 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Limpiar todo
-                        </button>
-                        <button
-                            onClick={() => void save(false)}
-                            disabled={loading}
-                            className="h-11 rounded-lg border border-primary text-primary font-semibold hover:bg-primary/10 transition-colors disabled:opacity-50"
-                        >
-                            {loading ? 'Guardando...' : 'Guardar'}
-                        </button>
-                        <button
-                            onClick={() => void save(true)}
-                            disabled={loading}
-                            className="h-11 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Procesando...
-                                </>
-                            ) : (
-                                <>
-                                    <Download className="h-4 w-4" />
-                                    Guardar y Descargar
-                                </>
-                            )}
-                        </button>
-                    </div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <button
+                        onClick={clearAll}
+                        disabled={loading}
+                        className="flex h-11 items-center justify-center gap-2 rounded-lg border border-input bg-white font-medium text-foreground transition-colors hover:bg-muted/60 disabled:opacity-50"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Limpiar todo
+                    </button>
+                    <button
+                        onClick={() => void save(false)}
+                        disabled={loading}
+                        className="h-11 rounded-lg border border-primary font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                    >
+                        {loading ? 'Guardando...' : 'Guardar'}
+                    </button>
+                    <button
+                        onClick={() => void save(true)}
+                        disabled={loading}
+                        className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Procesando...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Guardar y Descargar
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </div>
     )
 }
-
