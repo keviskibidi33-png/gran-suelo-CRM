@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { Beaker, ChevronDown, Download, Loader2, Trash2 } from 'lucide-react'
 import { getGranSueloEnsayoDetail, saveAndDownloadGranSueloExcel, saveGranSueloEnsayo } from '@/services/api'
 import type { GranSueloPayload } from '@/types'
+import FormatConfirmModal from '../components/FormatConfirmModal'
 
 const DRAFT_KEY = 'gran_suelo_form_draft_v1'
 const DEBOUNCE_MS = 700
@@ -87,7 +88,7 @@ const initialState = (): GranSueloPayload => ({
     revisado_por: '-',
     revisado_fecha: '',
     aprobado_por: '-',
-    aprobado_fecha: formatTodayShortDate(),
+    aprobado_fecha: '',
 })
 
 const parseNum = (v: unknown): number | null => {
@@ -98,13 +99,7 @@ const parseNum = (v: unknown): number | null => {
 
 const getCurrentYearShort = () => new Date().getFullYear().toString().slice(-2)
 
-const formatTodayShortDate = () => {
-    const d = new Date()
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const yy = String(d.getFullYear()).slice(-2)
-    return `${dd}/${mm}/${yy}`
-}
+
 
 const normalizeMuestraCode = (raw: string): string => {
     const value = raw.trim().toUpperCase()
@@ -244,6 +239,8 @@ export default function GranSueloForm() {
         localStorage.removeItem(`${DRAFT_KEY}:${editingEnsayoId ?? 'new'}`)
         setForm(initialState())
     }, [editingEnsayoId])
+    const [pendingFormatAction, setPendingFormatAction] = useState<boolean | null>(null)
+
 
     const save = useCallback(
         async (download: boolean) => {
@@ -409,21 +406,41 @@ export default function GranSueloForm() {
                             <tbody>
                                 <tr>
                                     <td className="border-r border-t border-slate-500 p-2">
-                                        {renderText(form.muestra, (v) => setField('muestra', v), '123-SU-26', () =>
-                                            applyFormattedField('muestra', normalizeMuestraCode),
+                                        {renderText(
+                                            form.muestra,
+                                            (v) => setField('muestra', v),
+                                            '123-SU-26',
+                                            () => applyFormattedField('muestra', normalizeMuestraCode),
+                                            'w-full h-8 border border-slate-300 bg-white px-2 text-center text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400',
                                         )}
                                     </td>
                                     <td className="border-r border-t border-slate-500 p-2">
-                                        {renderText(form.numero_ot, (v) => setField('numero_ot', v), '1234-26', () =>
-                                            applyFormattedField('numero_ot', normalizeNumeroOtCode),
+                                        {renderText(
+                                            form.numero_ot,
+                                            (v) => setField('numero_ot', v),
+                                            '1234-26',
+                                            () => applyFormattedField('numero_ot', normalizeNumeroOtCode),
+                                            'w-full h-8 border border-slate-300 bg-white px-2 text-center text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400',
                                         )}
                                     </td>
                                     <td className="border-r border-t border-slate-500 p-2">
-                                        {renderText(form.fecha_ensayo, (v) => setField('fecha_ensayo', v), 'DD/MM/AA', () =>
-                                            applyFormattedField('fecha_ensayo', normalizeFlexibleDate),
+                                        {renderText(
+                                            form.fecha_ensayo,
+                                            (v) => setField('fecha_ensayo', v),
+                                            'DD/MM/AA',
+                                            () => applyFormattedField('fecha_ensayo', normalizeFlexibleDate),
+                                            'w-full h-8 border border-slate-300 bg-white px-2 text-center text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400',
                                         )}
                                     </td>
-                                    <td className="border-t border-slate-500 p-2">{renderText(form.realizado_por, (v) => setField('realizado_por', v))}</td>
+                                    <td className="border-t border-slate-500 p-2">
+                                        {renderText(
+                                            form.realizado_por,
+                                            (v) => setField('realizado_por', v),
+                                            undefined,
+                                            undefined,
+                                            'w-full h-8 border border-slate-300 bg-white px-2 text-center text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400',
+                                        )}
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -729,7 +746,11 @@ export default function GranSueloForm() {
                                 <div className={SHEET_SECTION}>
                                     <div className={SHEET_TITLE}>Tabla de pesos mínimos</div>
                                     <div className="p-2">
-                                        <img src="/ImagenGranSuelo.png" alt="Tabla de pesos mínimos Gran Suelo" className="w-full border border-slate-400 object-contain" />
+                                        <img
+                                            src="/ImagenGranSuelo.png"
+                                            alt="Tabla de pesos mínimos Gran Suelo"
+                                            className="mx-auto w-[calc(100%-30px)] border border-slate-400 object-contain"
+                                        />
                                     </div>
                                     <p className="border-t border-slate-400 px-2 py-1 text-center text-[11px] text-slate-800">
                                         Fuente: Norma ASTM D6913/D6913M-17 (Reapproved 2025)
@@ -796,14 +817,14 @@ export default function GranSueloForm() {
                         Limpiar todo
                     </button>
                     <button
-                        onClick={() => void save(false)}
+                        onClick={() => setPendingFormatAction(false)}
                         disabled={loading}
                         className="h-11 rounded-lg border border-primary font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
                     >
                         {loading ? 'Guardando...' : 'Guardar'}
                     </button>
                     <button
-                        onClick={() => void save(true)}
+                        onClick={() => setPendingFormatAction(true)}
                         disabled={loading}
                         className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
@@ -821,6 +842,19 @@ export default function GranSueloForm() {
                     </button>
                 </div>
             </div>
+            <FormatConfirmModal
+                open={pendingFormatAction !== null}
+                formatLabel={`Formato N-xxxx-SU-${new Date().getFullYear().toString().slice(-2)} GR. SUELO`}
+                actionLabel={pendingFormatAction ? 'Guardar y Descargar' : 'Guardar'}
+                onClose={() => setPendingFormatAction(null)}
+                onConfirm={() => {
+                    if (pendingFormatAction === null) return
+                    const shouldDownload = pendingFormatAction
+                    setPendingFormatAction(null)
+                    void save(shouldDownload)
+                }}
+            />
+
         </div>
     )
 }
