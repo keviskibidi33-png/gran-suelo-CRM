@@ -30,6 +30,12 @@ api.interceptors.response.use(
     },
 )
 
+
+const extractFilename = (contentDisposition?: string): string | undefined => {
+    const match = typeof contentDisposition === 'string' ? contentDisposition.match(/filename="?([^";]+)"?/i) : null
+    return match?.[1]
+}
+
 export async function saveGranSueloEnsayo(
     payload: GranSueloPayload,
     ensayoId?: number,
@@ -46,7 +52,7 @@ export async function saveGranSueloEnsayo(
 export async function saveAndDownloadGranSueloExcel(
     payload: GranSueloPayload,
     ensayoId?: number,
-): Promise<{ blob: Blob; ensayoId?: number }> {
+): Promise<{ blob: Blob; ensayoId?: number; filename?: string }> {
     const response = await api.post('/api/gran-suelo/excel', payload, {
         params: {
             download: true,
@@ -56,10 +62,17 @@ export async function saveAndDownloadGranSueloExcel(
     })
 
     const ensayoIdHeader = response.headers['x-gran-suelo-id']
+    const contentDisposition = response.headers['content-disposition']
     const parsedId = Number(ensayoIdHeader)
+    const filenameMatch =
+        typeof contentDisposition === 'string'
+            ? contentDisposition.match(/filename=\"?([^\";]+)\"?/i)
+            : null
+
     return {
         blob: response.data,
         ensayoId: Number.isFinite(parsedId) ? parsedId : undefined,
+        filename: filenameMatch?.[1],
     }
 }
 
