@@ -749,7 +749,7 @@ export default function GranSueloForm() {
                                         <img
                                             src="/ImagenGranSuelo.png"
                                             alt="Tabla de pesos mínimos Gran Suelo"
-                                            className="mx-auto w-[calc(100%-30px)] border border-slate-400 object-contain"
+                                            className="mx-auto w-[calc(100%-60px)] border border-slate-400 object-contain"
                                         />
                                     </div>
                                     <p className="border-t border-slate-400 px-2 py-1 text-center text-[11px] text-slate-800">
