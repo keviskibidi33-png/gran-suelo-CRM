@@ -441,7 +441,7 @@ export default function GranSueloForm() {
                                         {renderText(
                                             form.fecha_ensayo,
                                             (v) => setField('fecha_ensayo', v),
-                                            'DD/MM/AA',
+                                            'YYYY/MM/DD',
                                             () => applyFormattedField('fecha_ensayo', normalizeFlexibleDate),
                                             'w-full h-8 border border-slate-300 bg-white px-2 text-center text-[13px] text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-400',
                                         )}
@@ -800,7 +800,7 @@ export default function GranSueloForm() {
                                             <p className="mb-2 text-[13px] font-semibold text-slate-900">Revisado:</p>
                                             <div className="space-y-2">
                                                 {renderSelect(form.revisado_por || '-', REVISADO, (v) => setField('revisado_por', v))}
-                                                {renderText(form.revisado_fecha || '', (v) => setField('revisado_fecha', v), 'DD/MM/AA', () =>
+                                                {renderText(form.revisado_fecha || '', (v) => setField('revisado_fecha', v), 'YYYY/MM/DD', () =>
                                                     applyFormattedField('revisado_fecha', normalizeFlexibleDate),
                                                 )}
                                             </div>
@@ -809,7 +809,7 @@ export default function GranSueloForm() {
                                             <p className="mb-2 text-[13px] font-semibold text-slate-900">Aprobado:</p>
                                             <div className="space-y-2">
                                                 {renderSelect(form.aprobado_por || '-', APROBADO, (v) => setField('aprobado_por', v))}
-                                                {renderText(form.aprobado_fecha || '', (v) => setField('aprobado_fecha', v), 'DD/MM/AA', () =>
+                                                {renderText(form.aprobado_fecha || '', (v) => setField('aprobado_fecha', v), 'YYYY/MM/DD', () =>
                                                     applyFormattedField('aprobado_fecha', normalizeFlexibleDate),
                                                 )}
                                             </div>
