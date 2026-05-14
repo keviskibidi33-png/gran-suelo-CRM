@@ -46,7 +46,7 @@ const CONDICION = ['-', 'ALTERADO', 'INTACTA'] as const
 const SI_NO = ['-', 'SI', 'NO'] as const
 const TAMIZ_SEPARADOR = ['-', 'No. 4', 'No. 10', 'No. 20'] as const
 const EQ_BALANZA = ['-', 'EQP-0046'] as const
-const EQ_HORNO = ['-', 'EQP-0150'] as const
+const EQ_HORNO = ['-', 'EQP-0150', 'EQP-0049'] as const
 const REVISADO = ['-', 'FABIAN LA ROSA'] as const
 const APROBADO = ['-', 'IRMA COAQUIRA'] as const
 
