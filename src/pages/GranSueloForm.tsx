@@ -806,7 +806,7 @@ export default function GranSueloForm() {
                                         <div className="border-r border-slate-500 p-2">
                                             <p className="mb-2 text-[13px] font-semibold text-slate-900">Revisado:</p>
                                             <div className="space-y-2">
-                                                {renderSelect(form.revisado_por || '-', REVISADO, (v) => setField('revisado_por', v))}
+                                                {renderSelect(form.revisado_por || '-', REVISADO, (v) => { setField('revisado_por', v); if (v !== '-') { setField('revisado_fecha', normalizeFlexibleDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' }))) } })}
                                                 {renderText(form.revisado_fecha || '', (v) => setField('revisado_fecha', v), 'YYYY/MM/DD', () =>
                                                     applyFormattedField('revisado_fecha', normalizeFlexibleDate),
                                                 )}
@@ -815,7 +815,7 @@ export default function GranSueloForm() {
                                         <div className="p-2">
                                             <p className="mb-2 text-[13px] font-semibold text-slate-900">Aprobado:</p>
                                             <div className="space-y-2">
-                                                {renderSelect(form.aprobado_por || '-', APROBADO, (v) => setField('aprobado_por', v))}
+                                                {renderSelect(form.aprobado_por || '-', APROBADO, (v) => { setField('aprobado_por', v); if (v !== '-') { setField('aprobado_fecha', normalizeFlexibleDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' }))) } })}
                                                 {renderText(form.aprobado_fecha || '', (v) => setField('aprobado_fecha', v), 'YYYY/MM/DD', () =>
                                                     applyFormattedField('aprobado_fecha', normalizeFlexibleDate),
                                                 )}
