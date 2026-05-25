@@ -255,6 +255,20 @@ export default function GranSueloForm() {
         }
     }, [editingEnsayoId])
 
+    useEffect(() => {
+        if (form.revisado_por && form.revisado_por !== '-' && !form.revisado_fecha) {
+            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' })
+            setField('revisado_fecha', normalizeFlexibleDate(today))
+        }
+    }, [form.revisado_por, form.revisado_fecha, setField])
+
+    useEffect(() => {
+        if (form.aprobado_por && form.aprobado_por !== '-' && !form.aprobado_fecha) {
+            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' })
+            setField('aprobado_fecha', normalizeFlexibleDate(today))
+        }
+    }, [form.aprobado_por, form.aprobado_fecha, setField])
+
     const clearAll = useCallback(() => {
         if (!window.confirm('Se limpiarán los datos no guardados. ¿Deseas continuar?')) return
         localStorage.removeItem(`${DRAFT_KEY}:${editingEnsayoId ?? 'new'}`)
@@ -806,7 +820,14 @@ export default function GranSueloForm() {
                                         <div className="border-r border-slate-500 p-2">
                                             <p className="mb-2 text-[13px] font-semibold text-slate-900">Revisado:</p>
                                             <div className="space-y-2">
-                                                {renderSelect(form.revisado_por || '-', REVISADO, (v) => { setField('revisado_por', v); if (v !== '-') { setField('revisado_fecha', normalizeFlexibleDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' }))) } })}
+                                                {renderSelect(form.revisado_por || '-', REVISADO, (v) => {
+                                                    setField('revisado_por', v);
+                                                    if (v !== '-') {
+                                                        setField('revisado_fecha', normalizeFlexibleDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' })))
+                                                    } else {
+                                                        setField('revisado_fecha', '')
+                                                    }
+                                                })}
                                                 {renderText(form.revisado_fecha || '', (v) => setField('revisado_fecha', v), 'YYYY/MM/DD', () =>
                                                     applyFormattedField('revisado_fecha', normalizeFlexibleDate),
                                                 )}
@@ -815,7 +836,14 @@ export default function GranSueloForm() {
                                         <div className="p-2">
                                             <p className="mb-2 text-[13px] font-semibold text-slate-900">Aprobado:</p>
                                             <div className="space-y-2">
-                                                {renderSelect(form.aprobado_por || '-', APROBADO, (v) => { setField('aprobado_por', v); if (v !== '-') { setField('aprobado_fecha', normalizeFlexibleDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' }))) } })}
+                                                {renderSelect(form.aprobado_por || '-', APROBADO, (v) => {
+                                                    setField('aprobado_por', v);
+                                                    if (v !== '-') {
+                                                        setField('aprobado_fecha', normalizeFlexibleDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Lima' })))
+                                                    } else {
+                                                        setField('aprobado_fecha', '')
+                                                    }
+                                                })}
                                                 {renderText(form.aprobado_fecha || '', (v) => setField('aprobado_fecha', v), 'YYYY/MM/DD', () =>
                                                     applyFormattedField('aprobado_fecha', normalizeFlexibleDate),
                                                 )}
