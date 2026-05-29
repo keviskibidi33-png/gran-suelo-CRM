@@ -167,10 +167,6 @@ api.interceptors.response.use(
     },
 )
 
-const extractFilename = (contentDisposition?: string): string | undefined => {
-    const match = typeof contentDisposition === 'string' ? contentDisposition.match(/filename="?([^";]+)"?/i) : null
-    return match?.[1]
-}
 
 export async function saveGranSueloEnsayo(
     payload: GranSueloPayload,
