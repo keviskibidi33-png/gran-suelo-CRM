@@ -304,23 +304,33 @@ export default function GranSueloForm() {
             }
             setLoading(true)
             try {
+                let savedId = editingEnsayoId
+
                 if (download) {
-                    const { blob, filename } = await saveAndDownloadGranSueloExcel(form, editingEnsayoId ?? undefined)
+                    const { blob, ensayoId: returnedId, filename } = await saveAndDownloadGranSueloExcel(form, editingEnsayoId ?? undefined)
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement('a')
                     a.href = url
                     a.download = filename || buildGranSueloFilename(form.muestra)
                     a.click()
                     URL.revokeObjectURL(url)
+                    if (returnedId) savedId = returnedId
                 } else {
-                    await saveGranSueloEnsayo(form, editingEnsayoId ?? undefined)
+                    const saved = await saveGranSueloEnsayo(form, editingEnsayoId ?? undefined)
+                    savedId = saved.id
+                }
+
+                if (savedId && savedId !== editingEnsayoId) {
+                    setEditingEnsayoId(savedId)
+                    localStorage.removeItem(`${DRAFT_KEY}:new`)
+                    const newUrl = new URL(window.location.href)
+                    newUrl.searchParams.set('ensayo_id', String(savedId))
+                    window.history.replaceState(null, '', newUrl.toString())
                 }
 
                 localStorage.removeItem(`${DRAFT_KEY}:${editingEnsayoId ?? 'new'}`)
-                setForm(initialState())
-                setEditingEnsayoId(null)
-                if (window.parent !== window) window.parent.postMessage({ type: 'CLOSE_MODAL' }, '*')
                 toast.success(download ? 'Gran Suelo guardado y descargado.' : 'Gran Suelo guardado.')
+                if (window.parent !== window) window.parent.postMessage({ type: 'ENSAYO_SAVED' }, '*')
             } catch (error: unknown) {
                 let msg = error instanceof Error ? error.message : 'Error desconocido'
                 if (axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string') msg = error.response.data.detail
