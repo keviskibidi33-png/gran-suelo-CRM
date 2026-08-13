@@ -239,8 +239,14 @@ export default function GranSueloForm() {
         return () => window.clearTimeout(timer)
     }, [editingEnsayoId, form, showDraftBanner, loadingEdit])
 
+    const justSavedRef = useRef(false)
+
     useEffect(() => {
         if (!editingEnsayoId) return
+        if (justSavedRef.current) {
+            justSavedRef.current = false
+            return
+        }
         let cancelled = false
         const run = async () => {
             setLoadingEdit(true)
@@ -321,16 +327,21 @@ export default function GranSueloForm() {
                 }
 
                 if (savedId && savedId !== editingEnsayoId) {
+                    justSavedRef.current = true
                     setEditingEnsayoId(savedId)
                     localStorage.removeItem(`${DRAFT_KEY}:new`)
+                    localStorage.setItem(`${DRAFT_KEY}:${savedId}`, JSON.stringify(form))
                     const newUrl = new URL(window.location.href)
                     newUrl.searchParams.set('ensayo_id', String(savedId))
                     window.history.replaceState(null, '', newUrl.toString())
+                } else if (savedId) {
+                    localStorage.setItem(`${DRAFT_KEY}:${savedId}`, JSON.stringify(form))
                 }
 
-                localStorage.removeItem(`${DRAFT_KEY}:${editingEnsayoId ?? 'new'}`)
                 toast.success(download ? 'Gran Suelo guardado y descargado.' : 'Gran Suelo guardado.')
-                if (window.parent !== window) window.parent.postMessage({ type: 'ENSAYO_SAVED' }, '*')
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: download ? 'SAVED_AND_DOWNLOADED' : 'ENSAYO_SAVED', ensayoId: savedId }, '*')
+                }
             } catch (error: unknown) {
                 let msg = error instanceof Error ? error.message : 'Error desconocido'
                 if (axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string') msg = error.response.data.detail
